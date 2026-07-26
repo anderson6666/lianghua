@@ -7,6 +7,7 @@ Base URL: https://apihub.agnes-ai.com/v1
 """
 import json
 import os
+import time
 
 import pandas as pd
 
@@ -40,6 +41,7 @@ def call_agnes(messages: list, api_key: str = None) -> str:
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
+        "User-Agent": "LiangHua-Stock-Analyzer/1.0",
     }
 
     payload = {
@@ -49,18 +51,35 @@ def call_agnes(messages: list, api_key: str = None) -> str:
         "max_tokens": 4096,
     }
 
-    try:
-        resp = requests.post(
-            f"{AGNES_BASE_URL}/chat/completions",
-            headers=headers,
-            json=payload,
-            timeout=60,
-        )
-        resp.raise_for_status()
-        data = resp.json()
-        return data["choices"][0]["message"]["content"].strip()
-    except Exception as e:
-        raise RuntimeError(f"Agnes API 调用失败: {str(e)}")
+    max_retries = 3
+    retry_delay = 5
+
+    for attempt in range(max_retries):
+        try:
+            resp = requests.post(
+                f"{AGNES_BASE_URL}/chat/completions",
+                headers=headers,
+                json=payload,
+                timeout=120,
+            )
+            
+            if resp.status_code == 503:
+                if attempt < max_retries - 1:
+                    time.sleep(retry_delay * (attempt + 1))
+                    continue
+                else:
+                    raise RuntimeError("Agnes AI 服务暂时不可用（503），请稍后重试。")
+            
+            resp.raise_for_status()
+            data = resp.json()
+            return data["choices"][0]["message"]["content"].strip()
+        except requests.exceptions.RequestException as e:
+            if attempt < max_retries - 1:
+                time.sleep(retry_delay * (attempt + 1))
+                continue
+            raise RuntimeError(f"Agnes API 调用失败: {str(e)}")
+        except Exception as e:
+            raise RuntimeError(f"Agnes API 处理失败: {str(e)}")
 
 
 def generate_daily_report(
