@@ -3,13 +3,11 @@
 全免费：数据源 akshare / yfinance，AI 引擎 Agnes（免费版）。
 
 核心特性：
-1. 多市场支持（A股/美股/港股/加密）
-2. 实时新闻与市场情绪分析
-3. 量化巨头动向追踪（梁文峰/幻方量化）
-4. 机器学习趋势预测（结合情绪特征）
-5. 策略回测与自我优化
-6. Agnes AI 生成自然语言分析报告
-7. 系统自我认知与健康度评估
+1. 多市场支持（A股）
+2. 技术指标分析（MA/MACD/RSI/KDJ/布林带）
+3. 策略回测与自我优化
+4. Agnes AI 生成自然语言分析报告
+5. 系统自我认知与健康度评估
 
 免责声明：本软件仅用于技术学习与研究，所有分析、预测、回测结果均为
 历史数据统计与概率参考，不构成任何投资建议。据此投资风险自负。
@@ -24,7 +22,6 @@ from plotly.subplots import make_subplots
 from data import get_stock_data, get_fund_flow
 from indicators import add_indicators, latest_signals
 from backtest import run_backtest, STRATEGIES
-from predict import train_predict
 from agnes_agent import generate_daily_report, get_agnes_api_key
 from optimize import (
     load_history, record_backtest, generate_self_report,
@@ -91,7 +88,7 @@ st.sidebar.caption(
 # ---------------- 主区域 ----------------
 st.title("🤖 AI量化预测系统")
 st.caption(
-    "机器学习预测 · 策略回测 · AI报告 | 全免费开源"
+    "技术分析 · 策略回测 · AI报告 | 全免费开源"
 )
 st.warning(
     "⚠️ 免责声明：本软件所有结果均为历史数据统计与概率参考，"
@@ -160,8 +157,8 @@ if run:
 if st.session_state.loaded and st.session_state.df is not None:
     df = st.session_state.df
 
-    tab1, tab2, tab3, tab4, tab5 = st.tabs(
-        ["📊 行情图表", "🔔 指标信号", "🤖 趋势预测", "📉 策略回测", "📝 AI分析师报告"]
+    tab1, tab2, tab3, tab4 = st.tabs(
+        ["📊 行情图表", "🔔 指标信号", "📉 策略回测", "📝 AI分析师报告"]
     )
 
     # --- 行情图表 ---
@@ -193,51 +190,8 @@ if st.session_state.loaded and st.session_state.df is not None:
                     val = fund_flow[name]
                     col.metric(name, f"{val / 1e8:.2f}亿")
 
-    # --- 趋势预测 ---
-    with tab3:
-        st.subheader("机器学习次日趋势预测（多模型集成 + 三分类）")
-        
-        col_conf, col_opt = st.columns(2)
-        confidence_threshold = col_conf.slider("置信度阈值", 0.5, 0.8, 0.6, 0.05,
-            help="只在模型置信度超过此阈值时输出方向预测，否则标记为'观望'")
-        optimize = col_opt.checkbox("启用超参数优化（Optuna）", False,
-            help="使用贝叶斯优化搜索最优模型参数，训练时间会更长")
-        
-        try:
-            with st.spinner("正在训练模型..." + ("（含超参数优化，可能需要几分钟）" if optimize else "")):
-                res = train_predict(df,
-                                   confidence_threshold=confidence_threshold,
-                                   optimize=optimize)
-            
-            c1, c2, c3 = st.columns(3)
-            c1.metric("预测次日方向", res["direction"])
-            c2.metric("测试集准确率", f"{res['test_acc']*100:.1f}%")
-            c3.metric("高置信度准确率", f"{res['high_conf_acc']*100:.1f}%" if not np.isnan(res['high_conf_acc']) else "N/A")
-            
-            c4, c5, c6 = st.columns(3)
-            c4.metric("盈亏比", f"{res['profit_loss_ratio']:.2f}")
-            c5.metric("有效预测占比", f"{res['effective_ratio']*100:.1f}%")
-            c6.metric("置信度阈值", f"{res['confidence_threshold']*100:.0f}%")
-            
-            st.caption(f"训练样本数：{res['n_samples']} | 特征数：{res['n_features']} | 模型：{res['model_used']}")
-
-            st.write("**三分类概率分布**")
-            prob_df = pd.DataFrame({
-                "概率": [res["proba_up"], res["proba_down"], res["proba_flat"]]
-            }, index=["上涨", "下跌", "震荡"])
-            st.bar_chart(prob_df)
-
-            st.write("**特征重要性**")
-            st.bar_chart(res["importance"].head(20))
-
-            st.info("三分类策略：涨>1% / 震荡 / 跌>1%。预测基于技术指标+大盘特征，使用多模型集成学习，概率经过校准处理。")
-            st.warning("⚠️ 盈亏比（平均盈利/平均亏损）是比准确率更重要的指标。高准确率但低盈亏比的策略可能不赚钱。")
-            st.warning("⚠️ 超参数优化可能导致过拟合，历史表现不代表未来。建议先用默认参数测试。")
-        except Exception as e:
-            st.error(f"预测失败：{e}")
-
     # --- 策略回测 ---
-    with tab4:
+    with tab3:
         st.subheader(f"策略回测：{strategy}")
         try:
             bt = run_backtest(df, strategy, fee=fee, init_capital=float(init_capital))
@@ -274,7 +228,7 @@ if st.session_state.loaded and st.session_state.df is not None:
             st.error(f"回测失败：{e}")
 
     # --- AI分析师报告 ---
-    with tab5:
+    with tab4:
         st.subheader("🤖 Agnes AI 分析师报告")
 
         if not agnes_key:
@@ -284,11 +238,6 @@ if st.session_state.loaded and st.session_state.df is not None:
             signals = latest_signals(df)
             ml_result = {}
             bt_result = {}
-
-            try:
-                ml_result = train_predict(df)
-            except Exception:
-                pass
 
             try:
                 bt_result = run_backtest(df, strategy, fee=fee, init_capital=float(init_capital))
@@ -329,8 +278,6 @@ else:
         **📊 行情图表**：K线、均线、布林带、成交量、MACD 多子图联动
 
         **🔔 指标信号**：MA / MACD / RSI / 布林带 / KDJ 实时多空提示 + 资金流向
-
-        **🤖 趋势预测**：随机森林机器学习预测次日涨跌概率
 
         **📉 策略回测**：4 种经典策略 + 自适应策略推荐 + 回测结果自动记录
 

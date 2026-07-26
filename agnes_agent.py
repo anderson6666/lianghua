@@ -102,13 +102,6 @@ def generate_daily_report(
         for name, (text, tag) in signals.items()
     ])
 
-    ml_text = f"""
-机器学习预测：
-- 次日方向：{ml_result.get('direction', '未知')}
-- 上涨概率：{ml_result.get('proba_up', 0) * 100:.1f}%
-- 测试集准确率：{ml_result.get('test_acc', 0) * 100:.1f}%
-"""
-
     bt_text = ""
     if bt_result and "metrics" in bt_result:
         m = bt_result["metrics"]
@@ -133,9 +126,6 @@ def generate_daily_report(
 【技术指标信号】
 {signal_summary}
 
-【机器学习预测】
-{ml_text}
-
 【策略回测】
 {bt_text}
 
@@ -149,8 +139,8 @@ def generate_daily_report(
    - 当前市场结构判断
    - 技术形态分析
 
-3. 🤖 AI预测与策略建议
-   - 次日走势预测（结合技术面+机器学习）
+3. 💡 策略建议
+   - 基于技术指标的操作建议
    - 策略配置建议
 
 4. ⚠️ 风险提示
