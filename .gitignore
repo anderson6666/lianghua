@@ -10,7 +10,9 @@ venv/
 dist/
 build/
 *.log
-*.txt
+
+*.sqlite
+yfinance_cache.sqlite
 
 .streamlit/secrets.toml
 .streamlit/credentials.toml
