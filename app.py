@@ -1,12 +1,12 @@
 """
 股票量化预测软件 - Streamlit 主界面 (升级增强版)
-全免费：数据源 akshare / yfinance，AI 引擎 Agnes（免费版）。
+全免费：数据源 baostock / akshare，AI 引擎智谱GLM-4-Flash（稳定快速）。
 
 核心特性：
 1. 多市场支持（A股）
 2. 技术指标分析（MA/MACD/RSI/KDJ/布林带）
 3. 策略回测与自我优化
-4. Agnes AI 生成自然语言分析报告
+4. 智谱AI生成自然语言分析报告
 5. 系统自我认知与健康度评估
 
 免责声明：本软件仅用于技术学习与研究，所有分析、预测、回测结果均为
@@ -22,7 +22,7 @@ from plotly.subplots import make_subplots
 from data import get_stock_data, get_fund_flow
 from indicators import add_indicators, latest_signals
 from backtest import run_backtest, STRATEGIES
-from agnes_agent import generate_daily_report, get_agnes_api_key
+from agnes_agent import generate_daily_report, get_zhipu_api_key
 from optimize import (
     load_history, record_backtest, generate_self_report,
     evaluate_strategy, find_best_strategy, optimize_parameters,
@@ -37,17 +37,17 @@ if "df" not in st.session_state:
 if "loaded" not in st.session_state:
     st.session_state.loaded = False
 
-# ---------------- Agnes API Key 配置 ----------------
-st.sidebar.header("🔑 Agnes AI 配置")
-agnes_key = st.sidebar.text_input(
-    "Agnes API Key",
-    value=get_agnes_api_key(),
-    help="注册 https://platform.agnes-ai.com 获取免费 API Key",
+# ---------------- 智谱 API Key 配置 ----------------
+st.sidebar.header("🔑 智谱AI 配置")
+zhipu_key = st.sidebar.text_input(
+    "智谱API Key",
+    value=get_zhipu_api_key(),
+    help="注册 https://open.bigmodel.cn 获取 API Key",
 )
 st.sidebar.caption(
-    "Agnes AI 提供免费文本模型（1M上下文，20 RPM），用于生成自然语言分析报告。"
+    "智谱GLM-4-Flash模型速度快、成本低，用于生成自然语言分析报告。"
 )
-if agnes_key:
+if zhipu_key:
     st.sidebar.success("✅ API Key 已配置")
 else:
     st.sidebar.info("未配置 API Key 将无法生成 AI 报告")
@@ -229,11 +229,11 @@ if st.session_state.loaded and st.session_state.df is not None:
 
     # --- AI分析师报告 ---
     with tab4:
-        st.subheader("🤖 Agnes AI 分析师报告")
+        st.subheader("🤖 智谱AI 分析师报告")
 
-        if not agnes_key:
-            st.warning("请在左侧配置 Agnes API Key 以生成 AI 报告")
-            st.info("免费注册地址：https://platform.agnes-ai.com")
+        if not zhipu_key:
+            st.warning("请在左侧配置智谱 API Key 以生成 AI 报告")
+            st.info("注册地址：https://open.bigmodel.cn")
         else:
             signals = latest_signals(df)
             ml_result = {}
@@ -245,11 +245,11 @@ if st.session_state.loaded and st.session_state.df is not None:
                 pass
 
             if st.button("📝 生成分析报告", type="primary"):
-                with st.spinner("Agnes AI 正在分析并生成报告..."):
+                with st.spinner("智谱AI 正在分析并生成报告..."):
                     try:
                         report = generate_daily_report(
                             symbol, market, df, signals,
-                            ml_result, bt_result, api_key=agnes_key,
+                            ml_result, bt_result, api_key=zhipu_key,
                         )
                         st.markdown(report)
 
@@ -281,20 +281,17 @@ else:
 
         **📉 策略回测**：4 种经典策略 + 自适应策略推荐 + 回测结果自动记录
 
-        **📝 AI分析师报告**：Agnes AI 生成自然语言分析报告 + 系统自我分析
+        **📝 AI分析师报告**：智谱AI生成自然语言分析报告 + 系统自我分析
 
         ### 代码示例
         | 市场 | 示例代码 |
         |------|----------|
         | A股 | `600519`（贵州茅台）、`000001`（平安银行） |
-        | 美股 | `AAPL`、`TSLA`、`MSFT` |
-        | 港股 | `00700`（腾讯）、`09988`（阿里） |
-        | 加密货币 | `BTC-USD`、`ETH-USD` |
 
-        ### Agnes AI 配置
-        1. 访问 https://platform.agnes-ai.com 注册账号
+        ### 智谱AI 配置
+        1. 访问 https://open.bigmodel.cn 注册账号
         2. 创建 API Key
         3. 在左侧输入框粘贴 Key
-        4. 即可生成 AI 分析报告（免费版 20 RPM）
+        4. 即可生成 AI 分析报告（GLM-4-Flash模型速度快成本低）
         """
     )

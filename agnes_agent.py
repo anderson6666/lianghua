@@ -1,9 +1,9 @@
 """
-Agnes AI 代理模块 - 生成自然语言报告
-Agnes AI 是新加坡 Sapiens AI 推出的免费 AI 服务，支持 OpenAI 兼容接口。
-官网：https://platform.agnes-ai.com
-Base URL: https://apihub.agnes-ai.com/v1
-免费模型: Agnes-2.0-Flash (1M上下文)
+智谱AI 代理模块 - 生成自然语言报告
+智谱AI 是国内领先的AI服务商，GLM-4-Flash模型速度快且稳定。
+官网：https://open.bigmodel.cn
+Base URL: https://open.bigmodel.cn/api/paas/v4/
+模型: glm-4-flash (速度快，成本低)
 """
 import json
 import os
@@ -15,37 +15,36 @@ import requests
 import streamlit as st
 
 
-AGNES_BASE_URL = "https://apihub.agnes-ai.com/v1"
-AGNES_MODEL = "Agnes-2.0-Flash"
+ZHIPU_BASE_URL = "https://open.bigmodel.cn/api/paas/v4"
+ZHIPU_MODEL = "glm-4-flash"
 
 
-def get_agnes_api_key() -> str:
-    """获取 Agnes API Key（优先从环境变量，其次从 Streamlit Secrets）"""
-    key = os.environ.get("AGNES_API_KEY")
+def get_zhipu_api_key() -> str:
+    """获取智谱 API Key（优先从环境变量，其次从 Streamlit Secrets）"""
+    key = os.environ.get("ZHIPU_API_KEY")
     if not key:
         try:
-            key = st.secrets.get("agnes", {}).get("api_key", "")
+            key = st.secrets.get("zhipu", {}).get("api_key", "")
         except Exception:
             key = ""
     return key
 
 
-def call_agnes(messages: list, api_key: str = None) -> str:
-    """调用 Agnes AI 生成文本"""
+def call_zhipu(messages: list, api_key: str = None) -> str:
+    """调用智谱 AI 生成文本"""
     if not api_key:
-        api_key = get_agnes_api_key()
+        api_key = get_zhipu_api_key()
 
     if not api_key:
-        raise ValueError("请设置 AGNES_API_KEY 环境变量或在 Streamlit Secrets 中配置。")
+        raise ValueError("请设置 ZHIPU_API_KEY 环境变量或在 Streamlit Secrets 中配置。")
 
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
-        "User-Agent": "LiangHua-Stock-Analyzer/1.0",
     }
 
     payload = {
-        "model": AGNES_MODEL,
+        "model": ZHIPU_MODEL,
         "messages": messages,
         "temperature": 0.7,
         "max_tokens": 4096,
@@ -57,19 +56,19 @@ def call_agnes(messages: list, api_key: str = None) -> str:
     for attempt in range(max_retries):
         try:
             resp = requests.post(
-                f"{AGNES_BASE_URL}/chat/completions",
+                f"{ZHIPU_BASE_URL}/chat/completions",
                 headers=headers,
                 json=payload,
                 timeout=120,
             )
-            
+
             if resp.status_code == 503:
                 if attempt < max_retries - 1:
                     time.sleep(retry_delay * (attempt + 1))
                     continue
                 else:
-                    raise RuntimeError("Agnes AI 服务暂时不可用（503），请稍后重试。")
-            
+                    raise RuntimeError("智谱 AI 服务暂时不可用（503），请稍后重试。")
+
             resp.raise_for_status()
             data = resp.json()
             return data["choices"][0]["message"]["content"].strip()
@@ -77,9 +76,9 @@ def call_agnes(messages: list, api_key: str = None) -> str:
             if attempt < max_retries - 1:
                 time.sleep(retry_delay * (attempt + 1))
                 continue
-            raise RuntimeError(f"Agnes API 调用失败: {str(e)}")
+            raise RuntimeError(f"智谱 API 调用失败: {str(e)}")
         except Exception as e:
-            raise RuntimeError(f"Agnes API 处理失败: {str(e)}")
+            raise RuntimeError(f"智谱 API 处理失败: {str(e)}")
 
 
 def generate_daily_report(
@@ -159,7 +158,7 @@ def generate_daily_report(
         {"role": "user", "content": prompt},
     ]
 
-    return call_agnes(messages, api_key)
+    return call_zhipu(messages, api_key)
 
 
 def generate_optimization_report(history: list, api_key: str = None) -> str:
@@ -187,4 +186,4 @@ def generate_optimization_report(history: list, api_key: str = None) -> str:
         {"role": "user", "content": prompt},
     ]
 
-    return call_agnes(messages, api_key)
+    return call_zhipu(messages, api_key)
