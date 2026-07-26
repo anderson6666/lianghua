@@ -21,7 +21,7 @@ import plotly.graph_objects as go
 import streamlit as st
 from plotly.subplots import make_subplots
 
-from data import get_stock_data, get_fund_flow, get_market_index_data
+from data import get_stock_data, get_fund_flow
 from indicators import add_indicators, latest_signals
 from backtest import run_backtest, STRATEGIES
 from predict import train_predict
@@ -61,18 +61,12 @@ st.sidebar.title("📈 参数设置")
 
 MARKET_EXAMPLES = {
     "A股": "600519",
-    "美股": "AAPL",
-    "港股": "00700",
-    "加密货币": "BTC-USD",
 }
 
 market = st.sidebar.selectbox("市场", list(MARKET_EXAMPLES.keys()))
 
 # 网络提示
-if market == "A股":
-    st.sidebar.info("🌐 A股数据使用国内网络（baostock），无需代理")
-else:
-    st.sidebar.warning("🌐 美股/港股/加密货币需使用国外网络（VPN/代理），且 Yahoo Finance 有请求频率限制")
+st.sidebar.info("🌐 A股数据使用国内网络（baostock），无需代理")
 
 symbol = st.sidebar.text_input(
     "代码", value=MARKET_EXAMPLES[market],
@@ -91,10 +85,7 @@ init_capital = st.sidebar.number_input("初始资金", value=100000, step=10000)
 run = st.sidebar.button("🚀 开始分析", use_container_width=True, type="primary")
 
 st.sidebar.caption(
-    "数据源：baostock（A股，国内网络）、yfinance（美股/港股/加密，需国外网络）。"
-)
-st.sidebar.caption(
-    "⚠️ Yahoo Finance 有请求频率限制，频繁请求可能被暂时封禁。"
+    "数据源：baostock（A股，国内网络）、akshare（A股备用）。"
 )
 
 # ---------------- 主区域 ----------------
@@ -213,9 +204,8 @@ if st.session_state.loaded and st.session_state.df is not None:
             help="使用贝叶斯优化搜索最优模型参数，训练时间会更长")
         
         try:
-            with st.spinner("正在获取大盘数据并训练模型..." + ("（含超参数优化，可能需要几分钟）" if optimize else "")):
-                market_df = get_market_index_data(market, str(start), str(end))
-                res = train_predict(df, market_df=market_df, 
+            with st.spinner("正在训练模型..." + ("（含超参数优化，可能需要几分钟）" if optimize else "")):
+                res = train_predict(df,
                                    confidence_threshold=confidence_threshold,
                                    optimize=optimize)
             
