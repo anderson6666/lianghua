@@ -4,7 +4,7 @@
 
 ## ✨ 功能特性
 
-- 📊 **多市场支持**：A股（baostock）、美股/港股/加密货币（yfinance）
+- 📊 **多市场支持**：A股（baostock）
 - 📈 **技术指标分析**：MA、MACD、RSI、布林带、KDJ 等
 - 🤖 **机器学习预测**：多模型集成（XGBoost + LightGBM + RandomForest）+ 三分类策略
 - 📉 **策略回测**：4种经典策略 + 自适应策略推荐 + 回测结果自动记录
@@ -101,6 +101,3 @@ LiangHua/
 
 MIT License
 
-## 📞 联系方式
-
-GitHub: https://github.com/anderson6666/lianghua
