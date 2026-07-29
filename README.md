@@ -66,12 +66,7 @@ optuna>=3.0.0
 3. **选择日期范围**
 4. **点击「开始分析」**
 
-## ⚙️ Agnes AI 配置（可选）
 
-1. 访问 https://platform.agnes-ai.com 注册账号
-2. 创建 API Key
-3. 复制 `.streamlit/secrets.toml.example` 为 `.streamlit/secrets.toml`
-4. 将 API Key 填入 `api_key` 字段
 
 ## 📁 项目结构
 
